@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the caller is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if the caller is the owner of the document
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Helper function to check if caller has admin role via users document
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.role == 'admin') ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // Users collection: users can read their own doc, admins can read all
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == userId && request.resource.data.role == 'user';
+      allow update: if (isOwner(userId) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Destinations collection: public read, admin write
+    match /destinations/{destId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Places collection: public read published, admin write
+    match /places/{placeId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Hotels collection: public read published, admin write
+    match /hotels/{hotelId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Restaurants collection: public read published, admin write
+    match /restaurants/{restaurantId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Reviews collection:
+    // - Public read for approved reviews
+    // - Users can create review only with status 'pending', reportCount 0, helpfulCount 0
+    // - Users can edit/delete their own review
+    // - Admins can approve/reject/modify any review
+    match /reviews/{reviewId} {
+      allow read: if (resource.data.status == 'approved') || (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      
+      allow create: if isSignedIn() 
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.helpfulCount == 0
+        && request.resource.data.reportCount == 0
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+        
+      allow update: if (isOwner(resource.data.userId) 
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'helpfulCount', 'reportCount'])))
+        || isAdmin()
+        || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['helpfulCount']));
+        
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Reports collection: signed-in users can report reviews
+    match /reports/{reportId} {
+      allow create: if isSignedIn() && request.resource.data.reporterId == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Forum threads (schema in place for future)
+    match /forumThreads/{threadId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Trips collection: owners can read and write; public can read if isPublic is true
+    match /trips/{tripId} {
+      allow read: if (resource.data.isPublic == true) || (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Itineraries: shared read or owner read/write
+    match /itineraries/{tripId} {
+      allow read: if true;
+      allow write: if isSignedIn() || isAdmin();
+    }
+
+    // Affiliate clicks: record outbound clicks anonymously or signed-in
+    match /affiliateClicks/{clickId} {
+      allow create: if true;
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+  }
+}

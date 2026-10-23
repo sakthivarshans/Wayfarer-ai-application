@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FFFFFF;
+  --surface: #F5F3FF;
+  --surface-hover: #EDE9FE;
+  --border: #EDE9FE;
+  --primary: #6D28D9;
+  --primary-hover: #5B21B6;
+  --accent: #8B5CF6;
+  --text-main: #1F1637;
+  --text-muted: #6B6385;
+  --star: #F59E0B;
+  --destructive: #DC2626;
+  --success: #16A34A;
+}
+
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* Custom Soft Violet Shadow */
+.shadow-wayfarer {
+  box-shadow: 0 8px 30px rgba(109, 40, 217, 0.09);
+}
+
+.shadow-wayfarer-lg {
+  box-shadow: 0 16px 40px rgba(109, 40, 217, 0.14);
+}
+
+/* Leaflet styling fixes for responsive map */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  z-index: 10;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 1rem;
+  padding: 4px;
+  box-shadow: 0 10px 25px -5px rgba(109, 40, 217, 0.15);
+  border: 1px solid #EDE9FE;
+}
+
+.leaflet-popup-content {
+  margin: 8px 12px;
+  line-height: 1.4;
+}
+
+/* Custom scrollbar in chat and side lists */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F5F3FF;
+}
+::-webkit-scrollbar-thumb {
+  background: #DDD6FE;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C4B5FD;
+}

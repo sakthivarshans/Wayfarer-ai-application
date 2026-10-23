@@ -1,0 +1,6 @@
+{
+  "name": "Wayfarer AI",
+  "description": "AI-native travel discovery & itinerary planning platform with TripAdvisor-style browsing, Leaflet maps, community reviews, and admin management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
